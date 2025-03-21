@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  api:
+    build: .
+    container_name: fitbuddy_api
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - mqtt
+    environment:
+      - DATABASE_URL=postgresql://fitbuddy:password@db/fitbuddy_db
+      - MQTT_BROKER=mqtt
+      - MQTT_PORT=1883
+    volumes:
+      - .:/app
+
+  db:
+    image: postgres:14
+    container_name: fitbuddy_db
+    environment:
+      POSTGRES_USER: fitbuddy
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: fitbuddy_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  mqtt:
+    image: eclipse-mosquitto
+    container_name: fitbuddy_mqtt
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./app/mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf
+
+volumes:
+  pgdata:
