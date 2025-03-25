@@ -1,4 +1,26 @@
 # Fit Buddy API
+---
+## NEXT STEPS !
+* recevoir donnees bruts et analysées
+
+* pouvoir renvoyer les deux a l'utilisateur
+
+* api fonctionnel avec les données de elias
+via aws IoT C ore quils puissent nous envoyer des données
+créer bdd pour toutes les données brutes + analysées
+
+
+##### BDD:
+2 TABLES
+- accélérations etc
+- besoins de elias
+- besoins des traitements de données
+
+important : bon flux de données sur les données traitées (toutes les x)
+
+envoi contsant a la Raspberry et la Raspberry decide d'envoyer tous les x selons plusieurs facteurs (ex possibles : mouvement activé etc)
+
+* Faire une interface pour le showroom !! (1h environ pour mettre) --> quelques rep et hop ça s'affiche sur l'interface!
 
 ## Installation
 ```sh
@@ -67,6 +89,14 @@ docker restart fitbuddy_api
 ```
 
 API disponible sur [(http://localhost:8000/docs)](http://localhost:8000/docs)
+
+## Lancer les tests
+### Avec pytest
+```sh
+pip install pytest
+pytest -v
+python -m pytest tests/
+```
 
 ## Fermer proprement le projet FitBuddy API
 Pour arrêter proprement tous les services Docker (API, base PostgreSQL, Mosquitto) et s’assurer qu’aucun processus ne reste actif :
