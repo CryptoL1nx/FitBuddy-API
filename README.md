@@ -21,6 +21,7 @@ important : bon flux de données sur les données traitées (toutes les x)
 envoi contsant a la Raspberry et la Raspberry decide d'envoyer tous les x selons plusieurs facteurs (ex possibles : mouvement activé etc)
 
 * Faire une interface pour le showroom !! (1h environ pour mettre) --> quelques rep et hop ça s'affiche sur l'interface!
+---
 
 ## Installation
 ```sh
