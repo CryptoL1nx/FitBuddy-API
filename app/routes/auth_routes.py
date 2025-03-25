@@ -19,3 +19,4 @@ def login(auth: AuthRequest):
     if auth.device_id in AUTHORIZED_DEVICES and AUTHORIZED_DEVICES[auth.device_id] == auth.password:
         return {"token": create_jwt_token(auth.device_id)}
     raise HTTPException(status_code=403, detail="Identifiants invalides")
+#token valide pour une durée déterminée (ex:2h)

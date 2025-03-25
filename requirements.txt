@@ -5,6 +5,7 @@ pydantic
 PyJWT
 sqlalchemy
 python-dotenv
+psycopg2-binary
 
 #pour les tests
 pytest

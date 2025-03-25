@@ -15,7 +15,7 @@ def create_jwt_token(device_id: str):
     token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
     return token
 
-# Vérifier un token JWT
+# Vérifier un token JWT (validité + expiration)
 def verify_token(token: str):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
