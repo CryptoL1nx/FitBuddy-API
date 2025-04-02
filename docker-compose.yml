@@ -1,0 +1,55 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:latest
+    container_name: fastapi-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: nassim
+      POSTGRES_PASSWORD: Project145
+      POSTGRES_DB: fitbuddy
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  mosquitto:
+    image: eclipse-mosquitto
+    container_name: fastapi-mosquitto
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
+
+  api:
+    build:
+      context: .
+    container_name: fastapi-api
+    depends_on:
+      - db
+      - mosquitto
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://nassim:Project145@db/fitbuddy
+      - MQTT_BROKER=mosquitto
+      - MQTT_PORT=1883
+    command: sh -c "/wait-for-services.sh && uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
+
+  mqtt-tests:
+    build:
+      context: .
+    container_name: mqtt-tests
+    depends_on:
+      - mosquitto
+    volumes:
+      - ./tests:/app/tests
+    working_dir: /app/tests
+    environment:
+      - MQTT_BROKER=fastapi-mosquitto
+      - MQTT_PORT=1883
+    entrypoint: ["sleep", "infinity"]
+
+volumes:
+  postgres_data:
