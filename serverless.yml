@@ -1,0 +1,29 @@
+service: fitbuddy-api
+
+useDotenv: true
+
+
+provider:
+  name: aws
+  runtime: python3.9
+  region: eu-north-1  # Paris 🇫🇷
+  timeout: 60 #au lieu de 30, pour éviter le timeout de 30s sur la lambda avant la fin de la requete
+  environment:
+    DATABASE_URL: ${env:DATABASE_URL}
+    MQTT_BROKER: ${env:MQTT_BROKER}
+    MQTT_PORT: ${env:MQTT_PORT}
+
+functions:
+  app:
+    handler: main.handler
+    events:
+      - httpApi: '*'
+
+plugins:
+  - serverless-python-requirements
+
+custom:
+  pythonRequirements:
+    dockerizePip: true
+    useDownloadCache: false
+    useStaticCache: false

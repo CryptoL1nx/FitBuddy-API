@@ -1,4 +1,6 @@
 from fastapi import FastAPI, Depends
+from mangum import Mangum   # For AWS Lambda compatibility  
+
 from sqlalchemy.orm import Session
 import models, schemas, services
 from database import engine, get_db
@@ -10,7 +12,9 @@ from database import SessionLocal
 
 
 load_dotenv()
-models.Base.metadata.create_all(bind=engine)
+#on passe la ligne suivant dans create_tables.py pour pas recréer toutes les tables dans la base de données à chaque appel de Lambda
+#models.Base.metadata.create_all(bind=engine)
+# on peut lancer create_tables.py manuellement la première fois pour créer les tables
 
 app = FastAPI()
 
@@ -63,3 +67,5 @@ def create_raw_data(data: schemas.RawSensorDataCreate, db: Session = Depends(get
 @app.get("/raw/", response_model=list[schemas.RawSensorDataResponse])
 def get_raw_data(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
     return services.get_raw_sensor_data(db, skip, limit)
+
+handler = Mangum(app) 

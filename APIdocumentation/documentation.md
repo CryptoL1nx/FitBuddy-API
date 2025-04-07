@@ -7,7 +7,9 @@ This FastAPI project serves as the backend service for collecting and managing f
 ## 🔧 Architecture Overview
 
 - **FastAPI** RESTful API for data processing  
-- **PostgreSQL** for persistent storage  
+- **AWS Lambda** for serverless API hosting
+- **AWS API Gateway** for HTTP endpoints exposure
+- **PostgreSQL (AWS RDS)** for persistent storage  
 - **Eclipse Mosquitto (MQTT)** for sensor data simulation  
 - **Docker** for environment portability and orchestration  
 - **pgAdmin / psql** for database inspection  
@@ -113,6 +115,96 @@ docker-compose up --build
 Each table includes:
 -  id (Primary Key)
 -  timestamp (datetime)
+
+---
+
+## ☁️ AWS Lambda Integration
+
+### Why Serverless with AWS Lambda?
+
+In this project, **AWS Lambda** was chosen to deploy the FastAPI application in a serverless architecture, in order to:
+
+- **Eliminate server management**: No need to manage EC2 instances or Docker containers in production.
+- **Enable automatic scaling**: Lambda scales automatically based on traffic load.
+- **Pay-as-you-go**: Costs only incur when the function is invoked.
+- **Simple API Exposure**: With **API Gateway**, it's straightforward to expose Lambda functions to the web.
+
+### AWS Architecture Components
+
+| Component                  | Description |
+|---------------------------|-------------|
+| **AWS Lambda**             | Runs the FastAPI app serverless. Entry point: `main.handler`. |
+| **API Gateway**            | HTTP API that triggers the Lambda function upon request. |
+| **RDS (PostgreSQL)**       | Cloud database storing sensor and status data. |
+| **VPC**                    | Lambda is attached to the same Virtual Private Cloud as RDS to allow secure private communication. |
+| **IAM Role**               | Lambda role with permissions to access network interfaces and CloudWatch logs. |
+| **CloudWatch Logs**        | Monitoring and debugging of Lambda executions. |
+| **MQTT Broker** (optional) | Still used for IoT data ingestion. |
+
+### Execution Flow
+
+1. **HTTP Request**  
+   A user (or IoT device, or tester) sends an HTTP request to an API Gateway endpoint.
+
+2. **API Gateway triggers Lambda**  
+   API Gateway forwards the request to the Lambda function (`main.handler`).
+
+3. **Lambda Executes FastAPI**  
+   FastAPI processes the request, and depending on the route (`/sensor/`, `/status/`, `/raw/`), it performs validations and DB operations.
+
+4. **Database Access via VPC**  
+   Lambda securely connects to the PostgreSQL database in RDS using the VPC configuration.
+
+5. **Response to Client**  
+   FastAPI sends the appropriate response back through API Gateway.
+
+### Lambda Configuration Details
+
+- **Handler:** `main.handler`
+- **Runtime:** Python 3.9
+- **Environment Variables:**
+  - `DATABASE_URL` : PostgreSQL connection string
+  - `MQTT_BROKER` : MQTT broker IP
+  - `MQTT_PORT` : MQTT broker port
+
+- **Timeout:** 30s (HTTP API limitation)
+- **Memory:** Adjustable depending on expected load
+- **VPC Configuration:**
+  - Subnets from the same VPC as RDS
+  - Security Group allowing port 5432 access (Postgres)
+
+### Security Best Practices
+
+- Lambda function runs in a **private VPC**, isolated from the public internet.
+- **No public access** to RDS except from trusted sources.
+- **IAM Role** restricts Lambda to only necessary permissions (`AWSLambdaBasicExecutionRole` + `EC2 network interface permissions`).
+- Future improvement: add **API Key / Cognito Auth** for public endpoints.
+
+### Challenges and Solutions
+
+| Challenge | Solution |
+|-----------|-----------|
+| Lambda could not connect to RDS | Attached Lambda to the same VPC and configured correct Security Groups (Ingress/Egress on port 5432). |
+| "No log streams" error | Fixed by adding `AWSLambdaBasicExecutionRole` for CloudWatch logs. |
+| API Gateway 404 / Not Found | Made sure that FastAPI paths match API Gateway routes, and re-deployed correctly with `serverless deploy`. |
+| "Internal Server Error" | Debugged Lambda logs in CloudWatch to fix environment variables and connection handling. |
+| CORS issues | Pending step: enable CORS in API Gateway for web clients. |
+
+### Deployment Steps
+
+1. Make sure `.env` is correctly configured locally:
+   ```env
+   DATABASE_URL=postgresql+psycopg2://username:password@host:port/dbname
+   MQTT_BROKER=<broker-ip>
+   MQTT_PORT=1883
+
+### Benefits of Lambda for this project
+
+- **Scalability:** automatic scaling without manual intervention.
+- **Cost efficiency:** pay-per-use, ideal for IoT systems with irregular data loads.
+- **Maintainability:** deploy new versions easily with Serverless.
+- **Security:** isolated in VPC, integrates AWS IAM for access control.
+
 
 ---
 

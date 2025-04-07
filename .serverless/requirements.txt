@@ -1,0 +1,8 @@
+alembic
+fastapi
+mangum
+paho-mqtt
+psycopg2-binary
+python-dotenv
+sqlalchemy
+uvicorn

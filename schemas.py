@@ -22,7 +22,7 @@ class SensorDataResponse(SensorDataBase):
     timestamp: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 #status
@@ -40,7 +40,7 @@ class SensorStatusResponse(SensorStatusBase):
     last_update: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 #raw
@@ -55,5 +55,5 @@ class RawSensorDataResponse(RawSensorDataCreate):
     timestamp: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
