@@ -153,10 +153,13 @@ In this project, **AWS Lambda** was chosen to deploy the FastAPI application in 
    FastAPI processes the request, and depending on the route (`/sensor/`, `/status/`, `/raw/`), it performs validations and DB operations.
 
 4. **Database Access via VPC**  
-   Lambda securely connects to the PostgreSQL database in RDS using the VPC configuration.
+   Lambda securely connects to the PostgreSQL database in RDS using the VPC configuration to read/write data.
 
 5. **Response to Client**  
-   FastAPI sends the appropriate response back through API Gateway.
+   Lambda sends API response back through API Gateway.
+
+6. **Logs available in CloudWatch**  
+   Useful for monitoring and debugging.
 
 ### Lambda Configuration Details
 
@@ -172,13 +175,27 @@ In this project, **AWS Lambda** was chosen to deploy the FastAPI application in 
 - **VPC Configuration:**
   - Subnets from the same VPC as RDS
   - Security Group allowing port 5432 access (Postgres)
+- **IAM Role:**  
+  Lambda uses a custom role with:
+  - Basic Lambda execution permissions
+  - VPC access permissions (CreateNetworkInterface, etc.)
+- **Security:**
+  - HTTPS enforced via API Gateway
+  - RDS database access limited to Lambda
+  - IAM roles follow principle of least privilege
+  - TLS enabled on PostgreSQL connection (default AWS RDS)
+
 
 ### Security Best Practices
 
+- API Gateway exposes only **HTTPS endpoints**.
 - Lambda function runs in a **private VPC**, isolated from the public internet.
-- **No public access** to RDS except from trusted sources.
+- **No public access** to RDS except from trusted sources (via security groups).
+- **CloudWatch** enabled for monitoring.
 - **IAM Role** restricts Lambda to only necessary permissions (`AWSLambdaBasicExecutionRole` + `EC2 network interface permissions`).
 - Future improvement: add **API Key / Cognito Auth** for public endpoints.
+- Future improvement: **CORS** configuration for web clients.
+
 
 ### Challenges and Solutions
 
@@ -197,6 +214,75 @@ In this project, **AWS Lambda** was chosen to deploy the FastAPI application in 
    DATABASE_URL=postgresql+psycopg2://username:password@host:port/dbname
    MQTT_BROKER=<broker-ip>
    MQTT_PORT=1883
+
+2. Deploy to AWS:
+```bash
+serverless deploy
+```
+
+3. Monitor logs:
+```bash
+serverless logs -f app -s dev
+```
+
+4. Test endpoints
+Create sensor data :
+```bash
+curl -X POST https://87xm72mkca.execute-api.eu-north-1.amazonaws.com/sensor/ \
+-H "Content-Type: application/json" \
+-d '{
+  "sensor_id": 1,
+  "repetitions": 10,
+  "duration": 60.5,
+  "difficulty": 3.5,
+  "speed": 1.2,
+  "amplitude": 20.3,
+  "left_side_force": 15.5,
+  "right_side_force": 16.0,
+  "imbalance_percentage": 2.5
+}'
+
+```
+
+Get all sensor data
+```bash
+curl -X GET https://87xm72mkca.execute-api.eu-north-1.amazonaws.com/sensor/
+```
+
+Create status data
+```bash
+curl -X POST https://87xm72mkca.execute-api.eu-north-1.amazonaws.com/status/ \
+-H "Content-Type: application/json" \
+-d '{
+  "sensor_id": 1,
+  "battery_level": 87.5,
+  "firmware_version": "1.2.3",
+  "is_functional": true
+}'
+
+```
+
+Get all status data
+```bash
+curl -X GET https://87xm72mkca.execute-api.eu-north-1.amazonaws.com/status/
+```
+
+Create raw sensor data
+```bash
+curl -X GET https://87xm72mkca.execute-api.eu-north-1.amazonaws.com/raw/ \
+-H "Content-Type: application/json" \
+-d '{
+  "accelerometer": "0.01,0.02,0.03",
+  "gyroscope": "0.05,0.06,0.07",
+  "magnetometer": "0.09,0.10,0.11"
+}'
+```
+
+Get all raw sensor data
+```bash
+curl -X GET https://87xm72mkca.execute-api.eu-north-1.amazonaws.com/raw/
+```
+
 
 ### Benefits of Lambda for this project
 
